@@ -105,6 +105,16 @@ export const jobInterviewTopics: JobInterviewTopic[] = [
     icon: "📈",
     color: "emerald",
   },
+  {
+    id: "hr-recruiter",
+    title: "HR / Recruiter",
+    description: "Screening interviews, candidate evaluation, and behavioral probing with structured notes",
+    difficulty: "beginner",
+    duration: 30,
+    skills: ["Behavioral Questions", "Evaluation", "Communication", "Decision Making"],
+    icon: "🧾",
+    color: "rose",
+  },
 ];
 
 export const skillDevelopmentTopics: SkillDevelopmentTopic[] = [
@@ -187,6 +197,16 @@ export const skillDevelopmentTopics: SkillDevelopmentTopic[] = [
     benefits: ["Relationship Building", "Professional Connections", "Opportunity Creation"],
     icon: "🌐",
     color: "cyan",
+  },
+  {
+    id: "critical-thinking",
+    title: "Critical Thinking",
+    description: "Sharpen reasoning, assumptions checking, and decision clarity under pressure",
+    focusArea: "Problem Solving",
+    duration: 35,
+    benefits: ["Clear Reasoning", "Better Decisions", "Stronger Arguments"],
+    icon: "🧠",
+    color: "violet",
   },
 ];
 
