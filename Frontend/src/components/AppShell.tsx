@@ -2,6 +2,18 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
+function readAuthName() {
+  if (typeof window === "undefined") return null;
+  const v = window.localStorage.getItem("robobuddy.auth");
+  if (!v) return null;
+  try {
+    const parsed = JSON.parse(v) as { name?: string };
+    return typeof parsed.name === "string" && parsed.name.trim() ? parsed.name.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 type Props = {
   title: string;
   children: React.ReactNode;
@@ -21,6 +33,7 @@ const navItems = [
 export function AppShell({ title, children }: Props) {
   const { pathname } = useLocation();
   const reducedMotion = useReducedMotion();
+  const displayName = readAuthName() ?? "Guest";
 
   return (
     <div className="min-h-screen text-zinc-900">
@@ -33,7 +46,7 @@ export function AppShell({ title, children }: Props) {
               </div>
               <div className="min-w-0 leading-tight">
                 <div className="text-sm font-semibold truncate">Interview Coach</div>
-                <div className="text-xs text-zinc-500">Aarohan</div>
+                <div className="text-xs text-zinc-500">{displayName}</div>
               </div>
             </div>
 
