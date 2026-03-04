@@ -1,0 +1,112 @@
+import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { Button } from "@/components/ui/Button";
+
+type Props = {
+  title: string;
+  children: React.ReactNode;
+};
+
+const navItems = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/practice", label: "Practice" },
+  { href: "/learning", label: "Learning Hub" },
+  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/analytics", label: "Analytics" },
+  { href: "/community", label: "Community" },
+  { href: "/profile", label: "Profile" },
+  { href: "/settings", label: "Settings" },
+];
+
+export function AppShell({ title, children }: Props) {
+  const { pathname } = useLocation();
+  const reducedMotion = useReducedMotion();
+
+  return (
+    <div className="min-h-screen text-zinc-900">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl gap-5 px-4 py-6 sm:px-5">
+        <aside className="w-56 shrink-0 lg:w-64">
+          <div className="sticky top-6 rounded-2xl bg-white/80 p-4 shadow-sm ring-1 ring-zinc-200/80 backdrop-blur-md border border-white/50">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-glow-sm">
+                AI
+              </div>
+              <div className="min-w-0 leading-tight">
+                <div className="text-sm font-semibold truncate">Interview Coach</div>
+                <div className="text-xs text-zinc-500">Aarohan</div>
+              </div>
+            </div>
+
+            <nav className="mt-4 space-y-0.5" aria-label="Main">
+              {navItems.map((it) => {
+                const isActive = pathname === it.href;
+                return (
+                  <Link
+                    key={it.label}
+                    to={it.href}
+                    className={`relative block rounded-xl px-3 py-2.5 text-sm transition-colors duration-normal focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                      isActive
+                        ? "text-zinc-900 font-medium bg-violet-50"
+                        : "text-zinc-700 hover:bg-violet-50/70 hover:text-zinc-900"
+                    }`}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {isActive && !reducedMotion && (
+                      <motion.span
+                        layoutId="nav-active"
+                        className="absolute inset-0 rounded-xl bg-violet-100/80 ring-1 ring-primary/20 -z-10"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        aria-hidden
+                      />
+                    )}
+                    {isActive && reducedMotion && (
+                      <span
+                        className="absolute inset-0 rounded-xl bg-violet-100/80 ring-1 ring-primary/20 -z-10"
+                        aria-hidden
+                      />
+                    )}
+                    {it.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mt-4">
+              <Button href="/learning" variant="primary" size="md" className="w-full">
+                Start Learning
+              </Button>
+            </div>
+          </div>
+        </aside>
+
+        <div className="min-w-0 flex-1">
+          <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/70 px-4 py-4 shadow-sm ring-1 ring-zinc-200/80 backdrop-blur-md border border-white/50 sm:px-5">
+            <h1 className="text-xl font-semibold sm:text-2xl">{title}</h1>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="hidden md:block">
+                <div className="flex items-center rounded-full bg-zinc-100 px-3 py-2 ring-1 ring-zinc-200 text-zinc-500 text-sm">
+                  Search
+                </div>
+              </div>
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-2 ring-1 ring-zinc-200 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 transition-colors"
+              >
+                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 shrink-0" />
+                <span className="text-sm font-medium hidden sm:inline">Profile</span>
+              </Link>
+              <div className="rounded-full bg-zinc-100 px-3 py-2 text-sm font-medium ring-1 ring-zinc-200">
+                10/100
+              </div>
+            </div>
+          </header>
+
+          <main id="main-content" className="mt-5" tabIndex={-1}>
+            {children}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}
