@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { staggerContainer, staggerItem } from "@/lib/motion";
 
 type Difficulty = "beginner" | "intermediate" | "advanced";
 type ResourceType = "video" | "article" | "exercise" | "template" | "quiz";
@@ -22,6 +25,7 @@ type LearningResource = {
 };
 
 export function LearningPage() {
+  const reducedMotion = useReducedMotion();
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<ResourceType | "all">("all");
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "all">("all");
@@ -121,18 +125,55 @@ export function LearningPage() {
 
   return (
     <AppShell title="Learning Hub">
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
-        <section className="lg:col-span-8">
-          <Card variant="glass" className="p-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+      <motion.div
+        className="grid grid-cols-1 gap-5 lg:grid-cols-12"
+        variants={reducedMotion ? undefined : staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        <motion.section className="lg:col-span-12" variants={reducedMotion ? undefined : staggerItem}>
+          <div className="relative overflow-hidden rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-zinc-200/80 backdrop-blur-md border border-white/50 sm:p-8">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-100/60 via-transparent to-indigo-100/40" aria-hidden />
+            <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <div className="text-sm font-semibold text-zinc-700">Resources</div>
-                <div className="mt-1 text-xs text-zinc-500">Search, bookmark, and track progress</div>
+                <div className="text-xs font-semibold text-violet-700">Learning Hub</div>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
+                  Keep building your edge — one small session a day
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm text-zinc-600">
+                  Browse curated resources, bookmark what matters, and track progress. Use Practice when you’re ready to test it live.
+                </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 ring-1 ring-zinc-200">
-                  {filtered.length} shown
-                </span>
+              <div className="flex flex-wrap gap-2">
+                <Button href="/practice" variant="primary" size="lg">
+                  Start Practice
+                </Button>
+                <Button href="/dashboard" variant="secondary" size="lg">
+                  Dashboard
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.aside className="lg:col-span-4" variants={reducedMotion ? undefined : staggerItem}>
+          <div className="space-y-5">
+            <Card variant="glass" className="p-5">
+              <div className="text-sm font-semibold text-zinc-700">Search & Filters</div>
+              <div className="mt-4">
+                <label className="sr-only" htmlFor="resource-search">
+                  Search resources
+                </label>
+                <input
+                  id="resource-search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search videos, exercises, templates..."
+                  className="w-full rounded-2xl bg-white px-4 py-3 text-sm ring-1 ring-zinc-200 placeholder:text-zinc-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"
                   className={`rounded-full px-3 py-1 text-xs ring-1 transition-colors ${
@@ -143,59 +184,89 @@ export function LearningPage() {
                 >
                   Bookmarks ({counts.bookmarked})
                 </button>
+                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 ring-1 ring-zinc-200">
+                  {filtered.length} shown
+                </span>
               </div>
-            </div>
 
-            <div className="mt-4">
-              <label className="sr-only" htmlFor="resource-search">
-                Search resources
-              </label>
-              <input
-                id="resource-search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search videos, exercises, templates..."
-                className="w-full rounded-2xl bg-white px-4 py-3 text-sm ring-1 ring-zinc-200 placeholder:text-zinc-400 focus:outline-none"
-              />
-            </div>
+              <div className="mt-4 space-y-3">
+                <FilterChip<ResourceType | "all">
+                  label="Type"
+                  value={typeFilter}
+                  options={["all", "video", "article", "exercise", "template", "quiz"]}
+                  onChange={setTypeFilter}
+                />
+                <FilterChip<Difficulty | "all">
+                  label="Difficulty"
+                  value={difficultyFilter}
+                  options={["all", "beginner", "intermediate", "advanced"]}
+                  onChange={setDifficultyFilter}
+                />
+              </div>
+            </Card>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              <FilterChip<ResourceType | "all">
-                label="Type"
-                value={typeFilter}
-                options={["all", "video", "article", "exercise", "template", "quiz"]}
-                onChange={setTypeFilter}
-              />
-              <FilterChip<Difficulty | "all">
-                label="Difficulty"
-                value={difficultyFilter}
-                options={["all", "beginner", "intermediate", "advanced"]}
-                onChange={setDifficultyFilter}
-              />
-            </div>
+            <Card variant="glass" className="p-5">
+              <div className="text-sm font-semibold text-zinc-700">Today’s Plan</div>
+              <div className="mt-3 space-y-3">
+                <PlanRow title="Watch 1 resource" meta="10–20 min" />
+                <PlanRow title="Do 1 drill" meta="5–10 min" />
+                <PlanRow title="Practice live" meta="10 min" />
+              </div>
+              <div className="mt-4">
+                <Button href="/practice" variant="robotic" size="md" className="w-full">
+                  Quick practice check
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </motion.aside>
 
-            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-              {filtered.map((r) => (
-                <ResourceCard key={r.id} r={r} onToggleBookmark={() => toggleBookmark(r.id)} />
-              ))}
-            </div>
-          </Card>
-        </section>
+        <motion.section className="lg:col-span-8" variants={reducedMotion ? undefined : staggerItem}>
+          <div className="space-y-5">
+            <Card variant="glass" className="p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-zinc-700">Continue Learning</div>
+                  <div className="mt-1 text-xs text-zinc-500">Pick up where you left off</div>
+                </div>
+                <div className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 ring-1 ring-zinc-200">
+                  {resources.filter((r) => r.progress > 0 && r.progress < 1).length} in progress
+                </div>
+              </div>
 
-        <section className="lg:col-span-4">
-          <Card variant="glass" className="p-5">
-            <div className="text-sm font-semibold text-zinc-700">Quick Actions</div>
-            <div className="mt-4 space-y-3">
-              <Button href="/practice" variant="primary" size="lg" className="w-full">
-                Start Practice Session
-              </Button>
-              <Button href="/dashboard" variant="secondary" size="lg" className="w-full">
-                Back to Dashboard
-              </Button>
-            </div>
-          </Card>
-        </section>
-      </div>
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {resources
+                  .filter((r) => r.progress > 0 && r.progress < 1)
+                  .slice(0, 2)
+                  .map((r) => (
+                    <FeaturedResource key={r.id} r={r} onToggleBookmark={() => toggleBookmark(r.id)} />
+                  ))}
+                {resources.filter((r) => r.progress > 0 && r.progress < 1).length === 0 ? (
+                  <div className="rounded-2xl bg-white p-5 ring-1 ring-zinc-200 md:col-span-2">
+                    <div className="text-sm font-semibold text-zinc-800">No active progress yet</div>
+                    <div className="mt-1 text-sm text-zinc-600">Start any resource below to see it here.</div>
+                  </div>
+                ) : null}
+              </div>
+            </Card>
+
+            <Card variant="glass" className="p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-zinc-700">All Resources</div>
+                  <div className="mt-1 text-xs text-zinc-500">Cleaner cards, better scanning, faster actions</div>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {filtered.map((r) => (
+                  <ResourceCard key={r.id} r={r} onToggleBookmark={() => toggleBookmark(r.id)} />
+                ))}
+              </div>
+            </Card>
+          </div>
+        </motion.section>
+      </motion.div>
     </AppShell>
   );
 }
@@ -238,56 +309,136 @@ function FilterChip<T extends string>({
 
 function ResourceCard({ r, onToggleBookmark }: { r: LearningResource; onToggleBookmark: () => void }) {
   return (
-    <Card variant="default" className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="text-sm font-semibold text-zinc-900 truncate">{r.title}</div>
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 ring-1 ring-zinc-200">
-              {r.type}
-            </span>
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 ring-1 ring-zinc-200">
-              {r.difficulty}
-            </span>
-          </div>
-          <div className="mt-1 text-xs text-zinc-500">{r.category}</div>
+    <Card variant="default" className="p-0">
+      <div className="flex h-full gap-4 p-4">
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-200 via-white to-indigo-200 ring-1 ring-zinc-200 grid place-items-center">
+          <span className="h-8 w-8 rounded-2xl bg-gradient-to-br from-zinc-900 to-violet-900/80" aria-hidden />
         </div>
 
-        <button
-          type="button"
-          onClick={onToggleBookmark}
-          className={`shrink-0 rounded-xl px-3 py-2 text-xs font-semibold ring-1 transition-colors ${
-            r.isBookmarked ? "bg-violet-100 text-violet-700 ring-primary/30" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-50"
-          }`}
-          aria-pressed={r.isBookmarked}
-          aria-label={r.isBookmarked ? "Remove bookmark" : "Add bookmark"}
-        >
-          {r.isBookmarked ? "Bookmarked" : "Bookmark"}
-        </button>
-      </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-zinc-900 truncate">{r.title}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 ring-1 ring-zinc-200">
+                  {r.type}
+                </span>
+                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 ring-1 ring-zinc-200">
+                  {r.difficulty}
+                </span>
+                <span className="rounded-full bg-white px-2 py-0.5 text-[11px] text-zinc-600 ring-1 ring-zinc-200">
+                  {r.category}
+                </span>
+              </div>
+            </div>
 
-      <p className="mt-3 text-sm text-zinc-600">{r.description}</p>
-
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-          <span className="rounded-full bg-white px-2 py-1 ring-1 ring-zinc-200">★ {r.rating.toFixed(1)}</span>
-          <span className="rounded-full bg-white px-2 py-1 ring-1 ring-zinc-200">{r.downloadCount} downloads</span>
-          {r.duration ? <span className="rounded-full bg-white px-2 py-1 ring-1 ring-zinc-200">{r.duration} min</span> : null}
-        </div>
-
-        <div className="w-full">
-          <div className="flex items-center justify-between text-xs">
-            <div className="text-zinc-500">Progress</div>
-            <div className="text-zinc-500">{Math.round(r.progress * 100)}%</div>
+            <button
+              type="button"
+              onClick={onToggleBookmark}
+              className={`shrink-0 rounded-xl px-3 py-2 text-xs font-semibold ring-1 transition-colors ${
+                r.isBookmarked ? "bg-violet-100 text-violet-700 ring-primary/30" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-50"
+              }`}
+              aria-pressed={r.isBookmarked}
+              aria-label={r.isBookmarked ? "Remove bookmark" : "Add bookmark"}
+            >
+              {r.isBookmarked ? "Saved" : "Save"}
+            </button>
           </div>
-          <div className="mt-2 h-2 rounded-full bg-zinc-100 ring-1 ring-zinc-200 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-600"
-              style={{ width: `${Math.round(r.progress * 100)}%` }}
-            />
+
+          <p className="mt-2 text-sm text-zinc-600 line-clamp-2">{r.description}</p>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+              <span className="rounded-full bg-white px-2 py-1 ring-1 ring-zinc-200">★ {r.rating.toFixed(1)}</span>
+              {r.duration ? <span className="rounded-full bg-white px-2 py-1 ring-1 ring-zinc-200">{r.duration} min</span> : null}
+              <span className="rounded-full bg-white px-2 py-1 ring-1 ring-zinc-200">{r.downloadCount}</span>
+            </div>
+
+            <div className="w-full">
+              <div className="flex items-center justify-between text-xs">
+                <div className="text-zinc-500">Progress</div>
+                <div className="text-zinc-500">{Math.round(r.progress * 100)}%</div>
+              </div>
+              <div className="mt-2 h-2 rounded-full bg-zinc-100 ring-1 ring-zinc-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-600"
+                  style={{ width: `${Math.round(r.progress * 100)}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </Card>
+  );
+}
+
+function FeaturedResource({ r, onToggleBookmark }: { r: LearningResource; onToggleBookmark: () => void }) {
+  const reducedMotion = useReducedMotion();
+  return (
+    <motion.div whileHover={reducedMotion ? undefined : { y: -3 }}>
+      <Card variant="holographic" className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="text-sm font-semibold text-zinc-900 truncate">{r.title}</div>
+              <span className="rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-zinc-700 ring-1 ring-zinc-200">
+                {r.type}
+              </span>
+            </div>
+            <div className="mt-1 text-xs text-zinc-600">{r.category}</div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onToggleBookmark}
+            className={`shrink-0 rounded-xl px-3 py-2 text-xs font-semibold ring-1 transition-colors ${
+              r.isBookmarked ? "bg-violet-100 text-violet-700 ring-primary/30" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-50"
+            }`}
+            aria-pressed={r.isBookmarked}
+            aria-label={r.isBookmarked ? "Remove bookmark" : "Add bookmark"}
+          >
+            {r.isBookmarked ? "Saved" : "Save"}
+          </button>
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-white/70 p-4 ring-1 ring-zinc-200">
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-zinc-500">Progress</div>
+            <div className="text-xs font-semibold text-zinc-700">{Math.round(r.progress * 100)}%</div>
+          </div>
+          <div className="mt-2 h-2 rounded-full bg-zinc-100 ring-1 ring-zinc-200 overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-600" style={{ width: `${Math.round(r.progress * 100)}%` }} />
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-2">
+            {r.tags.slice(0, 3).map((t) => (
+              <span key={t} className="rounded-full bg-white/70 px-2.5 py-1 text-xs text-zinc-700 ring-1 ring-zinc-200">
+                {t}
+              </span>
+            ))}
+          </div>
+          <Button href="/practice" variant="robotic" size="sm">
+            Practice now
+          </Button>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+function PlanRow({ title, meta }: { title: string; meta: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-2xl bg-white p-4 ring-1 ring-zinc-200">
+      <div>
+        <div className="text-sm font-semibold text-zinc-800">{title}</div>
+        <div className="mt-1 text-xs text-zinc-500">{meta}</div>
+      </div>
+      <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 ring-1 ring-primary/20">
+        today
+      </span>
+    </div>
   );
 }
