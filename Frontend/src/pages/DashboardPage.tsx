@@ -17,7 +17,7 @@ export function DashboardPage() {
       >
         <motion.section className="lg:col-span-4" variants={reducedMotion ? undefined : staggerItem}>
           <Card variant="glass" className="p-4">
-            <div className="text-sm font-semibold text-zinc-700">My Pet & Progress</div>
+            <div className="text-sm font-semibold text-zinc-700">User & Progress</div>
             <div className="mt-4 grid grid-cols-1 gap-4">
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 to-violet-900 p-5 text-white ring-1 ring-white/10 min-h-[168px]">
                 <div className="text-sm opacity-90">Your Robo</div>
@@ -28,7 +28,7 @@ export function DashboardPage() {
                       <div className="h-9 w-9 rounded-full bg-gradient-to-br from-violet-400 to-indigo-300 ring-1 ring-white/20" />
                     </div>
                     <div className="leading-tight">
-                      <div className="text-xs opacity-80">Pet IQ</div>
+                      <div className="text-xs opacity-80">User IQ</div>
                       <div className="text-2xl font-bold">190</div>
                     </div>
                   </div>
@@ -41,7 +41,7 @@ export function DashboardPage() {
               </div>
 
               <div className="rounded-2xl bg-white p-4 ring-1 ring-zinc-200 min-h-[188px] flex flex-col">
-                <div className="text-sm font-semibold text-zinc-700">Pet IQ Growth</div>
+                <div className="text-sm font-semibold text-zinc-700">User IQ Growth</div>
                 <div className="mt-3 flex-1">
                   <MiniLineChart
                     height={120}
@@ -61,7 +61,7 @@ export function DashboardPage() {
 
               <div className="grid grid-cols-2 gap-4 items-stretch">
                 <div className="rounded-2xl bg-white p-4 ring-1 ring-zinc-200 min-h-[110px] flex flex-col justify-between">
-                  <div className="text-xs text-zinc-500">Pet Mood</div>
+                  <div className="text-xs text-zinc-500">User Mood</div>
                   <div className="mt-1 text-lg font-semibold">Status</div>
                   <div className="mt-2 text-sm text-zinc-600">Focused + steady</div>
                 </div>
@@ -79,46 +79,30 @@ export function DashboardPage() {
           <Card variant="glass" className="p-4">
             <div className="text-sm font-semibold text-zinc-700">Daily Goals</div>
             <div className="mt-4 rounded-2xl bg-white ring-1 ring-zinc-200 overflow-hidden">
-              <div className="px-5 pt-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-xs text-zinc-500">Today</div>
-                  <div className="inline-flex shrink-0 rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 ring-1 ring-zinc-200 whitespace-nowrap">
-                    +15 IQ per goal
-                  </div>
+              <div className="flex items-center justify-between gap-3 px-4 pt-4 md:px-5 md:pt-5">
+                <div className="text-xs text-zinc-500">Today</div>
+                <div className="inline-flex shrink-0 rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 ring-1 ring-zinc-200 whitespace-nowrap">
+                  +15 IQ per goal
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-2">
-                <div className="p-5 md:p-6 min-w-0 flex flex-col">
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-[156px_1fr]">
+                <div className="px-4 pb-4 md:px-5 md:pb-5">
                   <div className="grid place-items-center">
-                    <ProgressRing value={0.33} size={96} />
+                    <ProgressRing value={0.33} size={88} />
                   </div>
-
-                  <div className="mt-4 text-center">
+                  <div className="mt-3 text-center">
                     <div className="text-3xl font-semibold text-zinc-900">1/3</div>
-                    <div className="mt-1 text-xs text-zinc-500">challenges completed</div>
+                    <div className="mt-1 text-[11px] leading-snug text-zinc-500">challenges completed</div>
                   </div>
-
-                  <div className="mt-5 h-2 rounded-full bg-zinc-100 ring-1 ring-zinc-200 overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-600"
-                      initial={reducedMotion ? false : { width: 0 }}
-                      animate={{ width: "33%" }}
-                      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-                    />
-                  </div>
-
-                  <div className="mt-4 text-xs text-zinc-500 text-center">Complete goals to grow Pet IQ faster.</div>
                 </div>
 
-                <div className="border-t border-zinc-100 md:border-t-0 md:border-l min-w-0 flex flex-col">
-                  <div className="flex-1">
-                    <DailyGoalRow title="Mock Test" subtitle="1/3 challenges completed" points="+15 IQ" />
-                    <Divider />
-                    <DailyGoalRow title="Viva Prep" subtitle="Complete structured answers" points="+15 IQ" />
-                    <Divider />
-                    <DailyGoalRow title="Viva Challenges" subtitle="Practice 5 viva questions" points="+15 IQ" />
-                  </div>
+                <div className="border-t border-zinc-100 md:border-t-0 md:border-l py-1">
+                  <DailyGoalRow title="Mock Test" subtitle="1/3 challenges completed" points="+15 IQ" />
+                  <Divider />
+                  <DailyGoalRow title="Viva Prep" subtitle="Complete structured answers" points="+15 IQ" />
+                  <Divider />
+                  <DailyGoalRow title="Viva Challenges" subtitle="Practice 5 viva questions" points="+15 IQ" />
                 </div>
               </div>
             </div>
