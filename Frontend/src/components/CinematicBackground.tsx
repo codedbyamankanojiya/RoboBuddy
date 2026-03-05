@@ -56,17 +56,28 @@ export function CinematicBackground({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [hasPointer, setHasPointer] = useState(false);
 
+  // Detect mobile viewport for aggressive perf optimization
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 768px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
   const renderMode = useMemo(() => {
     if (reducedMotion) return "static" as const;
-    if (deviceTier === "low") return "lite" as const;
-    return "cinematic" as const; // New cinematic mode
-  }, [deviceTier, reducedMotion]);
+    if (isMobile || deviceTier === "low") return "lite" as const;
+    return "cinematic" as const;
+  }, [deviceTier, reducedMotion, isMobile]);
 
   const allowParallax = renderMode === "cinematic";
   const allowStreams = renderMode === "cinematic";
-  const allowRobots = renderMode !== "static";
+  const allowRobots = renderMode !== "static" && !isMobile;
   const allowParticles = renderMode === "cinematic";
-  const allow3d = renderMode === "cinematic" && deviceTier === "high";
+  const allow3d = renderMode === "cinematic" && deviceTier === "high" && !isMobile;
 
   const px = useMotionValue(0);
   const py = useMotionValue(0);
@@ -157,7 +168,7 @@ export function CinematicBackground({
       {renderMode === "cinematic" && !shouldReduceEffects && (
         <VideoBackgroundLayer theme={theme} timeOfDay={timeOfDay} />
       )}
-      
+
       {/* Motion Graphics Layer */}
       {renderMode === "cinematic" && !shouldReduceEffects && (
         <div className="absolute inset-0">
@@ -166,7 +177,7 @@ export function CinematicBackground({
           <HolographicOverlays />
         </div>
       )}
-      
+
       {/* Atmospheric Effects */}
       <div className="absolute inset-0">
         <AtmosphericFog density={shouldLowerQuality ? 0.2 : 0.4} timeOfDay={timeOfDay} />
@@ -177,7 +188,7 @@ export function CinematicBackground({
           </div>
         )}
       </div>
-      
+
       {/* Interactive Layer */}
       {renderMode === "cinematic" && !shouldReduceEffects && (
         <div className="absolute inset-0">
@@ -185,7 +196,7 @@ export function CinematicBackground({
           <ScrollParallaxLayers />
         </div>
       )}
-      
+
       {/* Original Layers (fallback and compatibility) */}
       {/* Layer 1: deep environment base */}
       <div className="absolute inset-0 bg-gradient-to-br from-zinc-50 via-zinc-50 to-violet-100" aria-hidden />
@@ -221,9 +232,8 @@ export function CinematicBackground({
         }
       >
         <div
-          className={`h-full w-full bg-[linear-gradient(rgba(139,92,246,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.16)_1px,transparent_1px)] bg-[size:32px_32px] ${
-            reducedMotion ? "" : "animate-[gridMove_26s_linear_infinite]"
-          }`}
+          className={`h-full w-full bg-[linear-gradient(rgba(139,92,246,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.16)_1px,transparent_1px)] bg-[size:32px_32px] ${reducedMotion ? "" : "animate-[gridMove_26s_linear_infinite]"
+            }`}
         />
         <div className="absolute inset-0 opacity-[0.45] bg-[radial-gradient(circle_at_20%_30%,rgba(99,102,241,0.18),transparent_35%),radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.14),transparent_40%)]" />
       </motion.div>
@@ -231,9 +241,8 @@ export function CinematicBackground({
       {/* Layer 3: scanlines + noise */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.03]" aria-hidden>
         <div
-          className={`h-full w-full bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.15)_2px,rgba(0,0,0,0.15)_4px)] ${
-            reducedMotion ? "" : "animate-[scanline_8s_linear_infinite]"
-          }`}
+          className={`h-full w-full bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.15)_2px,rgba(0,0,0,0.15)_4px)] ${reducedMotion ? "" : "animate-[scanline_8s_linear_infinite]"
+            }`}
         />
       </div>
 
@@ -354,9 +363,9 @@ function NeuralField({
               reducedMotion
                 ? undefined
                 : {
-                    strokeDasharray: "2 6",
-                    animation: `dashFlow ${6 + (idx % 5)}s linear infinite`,
-                  }
+                  strokeDasharray: "2 6",
+                  animation: `dashFlow ${6 + (idx % 5)}s linear infinite`,
+                }
             }
           />
         ))}
@@ -371,9 +380,9 @@ function NeuralField({
               reducedMotion
                 ? undefined
                 : {
-                    animation: `neuralPulse ${2.2 + (idx % 7) * 0.25}s ease-in-out infinite`,
-                    animationDelay: `${(idx % 10) * 0.15}s`,
-                  }
+                  animation: `neuralPulse ${2.2 + (idx % 7) * 0.25}s ease-in-out infinite`,
+                  animationDelay: `${(idx % 10) * 0.15}s`,
+                }
             }
           />
         ))}
