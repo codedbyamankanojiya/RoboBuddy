@@ -32,7 +32,7 @@ function OptimizedImage({
 
 export function DashboardPage() {
   const reducedMotion = useReducedMotion();
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   return (
     <AppShell title="Dashboard">
@@ -47,17 +47,23 @@ export function DashboardPage() {
             <div className="text-sm font-semibold text-zinc-700">User & Progress</div>
             <div className="mt-4 grid grid-cols-1 gap-4 flex-1">
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 to-violet-900 p-5 text-white ring-1 ring-white/10 min-h-[168px]">
-                <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" aria-hidden />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-600/10 via-purple-600/10 to-indigo-600/10" aria-hidden />
+                {/* Decorative blurs */}
+                <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-violet-600/15 blur-3xl" aria-hidden />
+                <div className="pointer-events-none absolute -left-16 -bottom-16 h-40 w-40 rounded-full bg-indigo-600/10 blur-3xl" aria-hidden />
 
+                {/* Top: robo name + avatar */}
                 <div className="relative flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="text-sm opacity-90">Your Robo:</div>
-                    <div className="mt-1 text-lg font-semibold">Robo</div>
+                    <div className="text-xs font-medium tracking-wide uppercase text-white/60">Your Robo</div>
+                    <div className="mt-1.5 text-xl font-bold tracking-tight">Robo</div>
+                    <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold ring-1 ring-white/10">
+                      <span className="text-amber-400">★</span>
+                      <span className="text-white/90">Beginner</span>
+                    </div>
                   </div>
 
                   <div className="shrink-0">
-                    <div className="rounded-2xl bg-white/10 ring-1 ring-white/15 p-2">
+                    <div className="rounded-2xl bg-white/10 ring-1 ring-white/15 p-2 backdrop-blur-sm">
                       <motion.div
                         initial={reducedMotion ? false : { opacity: 0, y: 6 }}
                         animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
@@ -76,31 +82,46 @@ export function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="relative mt-4 flex items-end justify-between gap-4">
+                {/* Bottom: IQ gauge + XP bar */}
+                <div className="relative mt-5 flex items-center gap-4">
+                  {/* IQ ring */}
                   <div className="shrink-0">
-                    <div className="relative grid place-items-center rounded-full bg-white/10 ring-1 ring-white/15" style={{ width: 54, height: 54 }}>
-                      <div className="absolute inset-0 rounded-full" style={{ boxShadow: "inset 0 0 0 3px rgba(245, 158, 11, 0.65)" }} aria-hidden />
-                      <div className="text-lg font-bold">190</div>
+                    <div className="relative grid place-items-center" style={{ width: 56, height: 56 }}>
+                      <svg width={56} height={56} viewBox="0 0 56 56" aria-hidden>
+                        <circle cx={28} cy={28} r={23} stroke="rgba(255,255,255,0.1)" strokeWidth={4} fill="none" />
+                        <circle
+                          cx={28} cy={28} r={23}
+                          stroke="url(#iqRingGrad)" strokeWidth={4} fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray={`${2 * Math.PI * 23 * 0.76} ${2 * Math.PI * 23 * 0.24}`}
+                          transform="rotate(-90 28 28)"
+                        />
+                        <defs>
+                          <linearGradient id="iqRingGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stopColor="#f59e0b" />
+                            <stop offset="1" stopColor="#f97316" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      <div className="absolute text-sm font-bold">190</div>
                     </div>
                   </div>
 
-                  <div className="min-w-0 text-center">
-                    <div className="text-xs opacity-80">User IQ</div>
-                    <div className="mt-1 text-xs opacity-80">to next level</div>
-                  </div>
-
-                  <div className="shrink-0 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <div className="grid h-9 w-9 place-items-center rounded-full bg-white/10 ring-1 ring-white/15">
-                        <span className="text-amber-300 text-base" aria-hidden>
-                          ★
-                        </span>
-                      </div>
-                      <div>
-                        <div className="text-xs opacity-80">Level</div>
-                        <div className="text-sm font-semibold">Beginner</div>
-                      </div>
+                  {/* IQ label + XP progress bar */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-xs font-semibold text-white/80">User IQ</div>
+                      <div className="text-[10px] text-white/50">210 to next level</div>
                     </div>
+                    <div className="mt-2 h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: "76%" }}
+                        transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
+                      />
+                    </div>
+                    <div className="mt-1.5 text-[10px] text-white/40">190 / 250 XP</div>
                   </div>
                 </div>
               </div>
@@ -163,22 +184,12 @@ export function DashboardPage() {
                 </div>
 
                 <div className="border-t border-zinc-100 flex-1 overflow-hidden">
-                  <div className="grid grid-rows-5 h-full divide-y divide-zinc-100">
-                    <div className="flex items-center">
-                      <DailyGoalRow title="Mock Test" subtitle="1/3 challenges completed" points="+15 IQ" />
-                    </div>
-                    <div className="flex items-center">
-                      <DailyGoalRow title="Viva Prep" subtitle="Complete structured answers" points="+15 IQ" />
-                    </div>
-                    <div className="flex items-center">
-                      <DailyGoalRow title="Viva Challenges" subtitle="Practice 5 viva questions" points="+15 IQ" />
-                    </div>
-                    <div className="flex items-center">
-                      <DailyGoalRow title="Quick Revision" subtitle="Review key concepts" points="+15 IQ" />
-                    </div>
-                    <div className="flex items-center">
-                      <DailyGoalRow title="AI Feedback" subtitle="Analyze last session" points="+15 IQ" />
-                    </div>
+                  <div className="divide-y divide-zinc-100">
+                    <DailyGoalRow title="Mock Test" subtitle="1/3 challenges completed" points="+15 IQ" done />
+                    <DailyGoalRow title="Viva Prep" subtitle="Complete structured answers" points="+15 IQ" />
+                    <DailyGoalRow title="Viva Challenges" subtitle="Practice 5 viva questions" points="+15 IQ" />
+                    <DailyGoalRow title="Quick Revision" subtitle="Review key concepts" points="+15 IQ" />
+                    <DailyGoalRow title="AI Feedback" subtitle="Analyze last session" points="+15 IQ" />
                   </div>
                 </div>
               </div>
@@ -188,39 +199,47 @@ export function DashboardPage() {
 
         <motion.section className="lg:col-span-4 lg:row-start-1" variants={reducedMotion ? undefined : staggerItem}>
           <Card variant="glass" className="p-4 h-full flex flex-col">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-sm font-semibold text-zinc-700">This Week’s Leaderboard</div>
-                <div className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 ring-1 ring-zinc-200 shrink-0">
-                  This week
-                </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-semibold text-zinc-700">This Week’s Leaderboard</div>
+              <div className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 ring-1 ring-zinc-200 shrink-0">
+                This week
               </div>
-              <div className="mt-4 min-h-[188px] flex flex-col flex-1">
-                <MiniAreaChart height={150} points={[42, 44, 55, 58, 74, 70, 76]} />
-              </div>
-              <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
-                <span>Rank change</span>
-                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                  +2
-                </span>
-              </div>
+            </div>
+            <div className="mt-4 min-h-[188px] flex flex-col flex-1">
+              <MiniAreaChart height={150} points={[42, 44, 55, 58, 74, 70, 76]} />
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
+              <span>Rank change</span>
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                +2
+              </span>
+            </div>
 
 
-              <div className="mt-5">
-                <div className="text-sm font-semibold text-zinc-700">Quick Actions</div>
-                <div className="mt-3 grid grid-cols-3 gap-3 items-stretch">
-                  <QuickAction label="Book Mock Test" tone="violet" />
-                  <QuickAction label="Practice Prep Question" tone="amber" />
-                  <QuickAction label="Accept a Viva Challenge" tone="indigo" />
-                </div>
+            <div className="mt-5">
+              <div className="text-sm font-semibold text-zinc-700">Quick Actions</div>
+              <div className="mt-3 grid grid-cols-3 gap-3 items-stretch">
+                <QuickAction label="Book Mock Test" tone="violet" icon="test" />
+                <QuickAction label="Practice Prep Question" tone="amber" icon="practice" />
+                <QuickAction label="Accept a Viva Challenge" tone="indigo" icon="challenge" />
               </div>
+            </div>
 
-              <div className="mt-5">
-                <div className="text-sm font-semibold text-zinc-700">Pet Community Highlights</div>
-                <div className="mt-3 grid grid-cols-2 gap-4">
-                  <HighlightCard title="High Scores" desc="Community achievements" tone="gold" />
-                  <HighlightCard title="Favorite Robo Care" desc="Tips, guides" tone="violet" />
+            {/* Robo greeting */}
+            <div className="mt-5 relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-100 via-violet-50 to-white p-4 ring-1 ring-violet-200/60">
+              <div className="pointer-events-none absolute -right-6 -bottom-6 h-32 w-32 rounded-full bg-violet-300/20 blur-2xl" aria-hidden />
+              <div className="relative flex items-center gap-4">
+                <img
+                  src="/Assets/Robo/Hello.png"
+                  alt="RoboBuddy greeting"
+                  className="h-20 w-auto object-contain drop-shadow-lg shrink-0"
+                />
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-violet-900">Hello, Genius! 👋</div>
+                  <div className="mt-1 text-xs text-violet-700/70 leading-relaxed">Ready to level up your IQ today? Complete your daily goals to unlock rewards.</div>
                 </div>
               </div>
+            </div>
           </Card>
         </motion.section>
       </motion.div>
@@ -228,67 +247,59 @@ export function DashboardPage() {
   );
 }
 
-function QuickAction({ label, tone }: { label: string; tone: "violet" | "amber" | "indigo" }) {
+function QuickAction({ label, tone, icon }: { label: string; tone: "violet" | "amber" | "indigo"; icon: "test" | "practice" | "challenge" }) {
   const t =
     tone === "violet"
       ? "from-violet-200 to-white"
       : tone === "amber"
         ? "from-amber-200 to-white"
         : "from-indigo-200 to-white";
+
+  const iconPath =
+    icon === "test"
+      ? "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+      : icon === "practice"
+        ? "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+        : "M13 10V3L4 14h7v7l9-11h-7z";
+
   return (
     <div
-      className={`group rounded-2xl bg-gradient-to-br ${t} p-3 ring-1 ring-zinc-200 transition-transform duration-normal min-h-[110px] flex flex-col justify-between`}
+      className={`group rounded-2xl bg-gradient-to-br ${t} p-3 ring-1 ring-zinc-200 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-h-[110px] flex flex-col justify-between`}
     >
-      <div className="h-9 w-9 rounded-2xl bg-white ring-1 ring-zinc-200 grid place-items-center">
-        <span className="h-5 w-5 rounded-lg bg-gradient-to-br from-zinc-900 to-violet-900/80" aria-hidden />
+      <div className="h-9 w-9 rounded-2xl bg-white ring-1 ring-zinc-200 grid place-items-center shadow-sm">
+        <svg className="h-4 w-4 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={iconPath} />
+        </svg>
       </div>
       <div className="mt-2 text-[11px] font-semibold text-zinc-800 leading-snug">{label}</div>
-      <div className="mt-2 inline-flex items-center rounded-full bg-white/70 px-2.5 py-1 text-[11px] text-zinc-700 ring-1 ring-zinc-200">
-        start
+      <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-medium text-zinc-600 ring-1 ring-zinc-200 group-hover:bg-white group-hover:text-violet-700 group-hover:ring-violet-200 transition-colors">
+        start →
       </div>
     </div>
   );
 }
 
-function HighlightCard({
-  title,
-  desc,
-  tone,
-}: {
-  title: string;
-  desc: string;
-  tone: "gold" | "violet";
-}) {
-  const badge = tone === "gold" ? "from-amber-200 to-white" : "from-violet-200 to-white";
+
+
+function DailyGoalRow({ title, subtitle, points, done }: { title: string; subtitle: string; points: string; done?: boolean }) {
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-zinc-200">
-      <div className={`h-10 w-10 rounded-2xl bg-gradient-to-br ${badge} ring-1 ring-zinc-200 grid place-items-center`}>
-        <span className="h-5 w-5 rounded-lg bg-gradient-to-br from-zinc-900 to-zinc-700" aria-hidden />
+    <div className="flex items-center gap-3 px-4 py-3 sm:px-5 transition-colors hover:bg-zinc-50/60">
+      {/* Status dot — fixed width column */}
+      <span
+        className={`h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-white ${done ? "bg-emerald-500" : "bg-zinc-300"
+          }`}
+        aria-hidden
+      />
+
+      {/* Title + subtitle — flex-1 to fill remaining space */}
+      <div className="flex-1 min-w-0">
+        <div className={`text-sm font-semibold ${done ? "text-zinc-400 line-through" : "text-zinc-900"}`}>{title}</div>
+        <div className="text-xs text-zinc-500 leading-snug">{subtitle}</div>
       </div>
-      <div className="mt-3 text-sm font-semibold text-zinc-800">{title}</div>
-      <div className="mt-1 text-xs text-zinc-500">{desc}</div>
-    </div>
-  );
-}
 
-function DailyGoalRow({ title, subtitle, points }: { title: string; subtitle: string; points: string }) {
-  return (
-    <div className="px-4 py-3 sm:px-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <span
-            className="mt-1.5 h-2.5 w-2.5 rounded-full bg-zinc-300 ring-2 ring-white shrink-0"
-            aria-hidden
-          />
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-zinc-900">{title}</div>
-            <div className="mt-1 text-xs text-zinc-500 leading-snug">{subtitle}</div>
-          </div>
-        </div>
-
-        <div className="shrink-0 min-w-[72px] text-right rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 ring-1 ring-primary/20 whitespace-nowrap">
-          {points}
-        </div>
+      {/* Points badge — fixed width so they all align */}
+      <div className="shrink-0 w-[72px] text-center rounded-full bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700 ring-1 ring-primary/20 whitespace-nowrap">
+        {points}
       </div>
     </div>
   );
