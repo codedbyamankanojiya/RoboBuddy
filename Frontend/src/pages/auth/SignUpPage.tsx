@@ -54,6 +54,10 @@ export function SignUpPage() {
             else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Invalid email";
             if (!password) errs.password = "Password is required";
             else if (password.length < 12) errs.password = "Min 12 characters";
+            else if (!/[A-Z]/.test(password)) errs.password = "Must contain an uppercase letter";
+            else if (!/[a-z]/.test(password)) errs.password = "Must contain a lowercase letter";
+            else if (!/[0-9]/.test(password)) errs.password = "Must contain a number";
+            else if (!/[^A-Za-z0-9]/.test(password)) errs.password = "Must contain a special character";
             if (password !== confirmPassword) errs.confirmPassword = "Passwords don't match";
             if (Object.keys(errs).length) { setFieldErrors(errs); return false; }
         }
@@ -188,10 +192,10 @@ export function SignUpPage() {
                                                 <p className="text-zinc-500 text-sm mt-1">Tell us about yourself</p>
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
-                                                <InputField label="First Name" value={firstName} onChange={setFirstName} error={fieldErrors.firstName} placeholder="John" />
-                                                <InputField label="Last Name" value={lastName} onChange={setLastName} error={fieldErrors.lastName} placeholder="Doe" />
+                                                <InputField label="First Name" value={firstName} onChange={setFirstName} error={fieldErrors.firstName} placeholder="Arjun" />
+                                                <InputField label="Last Name" value={lastName} onChange={setLastName} error={fieldErrors.lastName} placeholder="Sharma" />
                                             </div>
-                                            <InputField label="Username" value={username} onChange={setUsername} error={fieldErrors.username} placeholder="johndoe_42"
+                                            <InputField label="Username" value={username} onChange={setUsername} error={fieldErrors.username} placeholder="arjun_sharma42"
                                                 icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />} />
                                             <InputField label="Date of Birth (optional)" type="date" value={dateOfBirth} onChange={setDateOfBirth} />
                                         </div>
