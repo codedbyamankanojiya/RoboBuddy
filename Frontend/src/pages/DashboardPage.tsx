@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { AppShell } from "@/components/AppShell";
@@ -248,12 +249,20 @@ export function DashboardPage() {
 }
 
 function QuickAction({ label, tone, icon }: { label: string; tone: "violet" | "amber" | "indigo"; icon: "test" | "practice" | "challenge" }) {
+  const navigate = useNavigate();
   const t =
     tone === "violet"
       ? "from-violet-200 to-white"
       : tone === "amber"
         ? "from-amber-200 to-white"
         : "from-indigo-200 to-white";
+
+  const href =
+    icon === "test"
+      ? "/practice/mock"
+      : icon === "practice"
+        ? "/practice"
+        : "/community";
 
   const iconPath =
     icon === "test"
@@ -263,8 +272,11 @@ function QuickAction({ label, tone, icon }: { label: string; tone: "violet" | "a
         : "M13 10V3L4 14h7v7l9-11h-7z";
 
   return (
-    <div
-      className={`group rounded-2xl bg-gradient-to-br ${t} p-3 ring-1 ring-zinc-200 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-h-[110px] flex flex-col justify-between`}
+    <button
+      type="button"
+      onClick={() => navigate(href)}
+      className={`group rounded-2xl bg-gradient-to-br ${t} p-3 ring-1 ring-zinc-200 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-h-[110px] flex flex-col justify-between text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-2`}
+      aria-label={`${label} (start)`}
     >
       <div className="h-9 w-9 rounded-2xl bg-white ring-1 ring-zinc-200 grid place-items-center shadow-sm">
         <svg className="h-4 w-4 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -275,7 +287,7 @@ function QuickAction({ label, tone, icon }: { label: string; tone: "violet" | "a
       <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-medium text-zinc-600 ring-1 ring-zinc-200 group-hover:bg-white group-hover:text-violet-700 group-hover:ring-violet-200 transition-colors">
         start →
       </div>
-    </div>
+    </button>
   );
 }
 

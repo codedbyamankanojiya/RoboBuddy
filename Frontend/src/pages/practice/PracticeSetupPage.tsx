@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { getTopic, type TopicCategory } from "@/pages/practice/practiceCatalog";
@@ -354,25 +355,11 @@ function ToggleRow({
 }) {
   return (
     <div className="flex items-start justify-between gap-4 rounded-2xl bg-white p-4 ring-1 ring-zinc-200">
-      <div>
+      <div className="min-w-0">
         <div className="text-sm font-semibold text-zinc-800">{label}</div>
         <div className="mt-1 text-xs text-zinc-500">{desc}</div>
       </div>
-      <button
-        type="button"
-        onClick={() => onChange(!value)}
-        className={`relative h-7 w-12 rounded-full ring-1 transition-colors ${
-          value ? "bg-violet-600 ring-violet-600" : "bg-zinc-200 ring-zinc-300"
-        }`}
-        role="switch"
-        aria-checked={value}
-        aria-label={label}
-      >
-        <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${value ? "translate-x-5" : "translate-x-0.5"}`}
-          aria-hidden
-        />
-      </button>
+      <ToggleSwitch checked={value} onCheckedChange={onChange} label={label} />
     </div>
   );
 }

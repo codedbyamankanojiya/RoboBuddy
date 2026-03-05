@@ -65,10 +65,19 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply min-h-screen antialiased;
     background-color: rgb(var(--color-bg));
     color: rgb(var(--color-text));
+  }
+
+  /* Improve scrolling feel on iOS and nested scroll containers */
+  * {
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Themed focus outline (accessibility) */

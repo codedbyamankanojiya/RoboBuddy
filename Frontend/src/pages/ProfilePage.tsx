@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 import { useAuth } from "@/contexts/AuthContext";
 import { AvatarUpload } from "@/components/auth/AvatarUpload";
 import { TwoFactorSetup } from "@/components/auth/TwoFactorSetup";
@@ -351,20 +352,7 @@ function Toggle({ label, desc, defaultChecked = false }: { label: string; desc: 
         <div className="text-sm font-semibold text-zinc-800">{label}</div>
         <div className="mt-0.5 text-xs text-zinc-500">{desc}</div>
       </div>
-      <button
-        type="button"
-        onClick={() => setChecked(!checked)}
-        className={`relative h-7 w-12 shrink-0 rounded-full ring-1 transition-colors ${checked ? "bg-violet-600 ring-violet-600" : "bg-zinc-200 ring-zinc-300"
-          }`}
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-      >
-        <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`}
-          aria-hidden
-        />
-      </button>
+      <ToggleSwitch checked={checked} onCheckedChange={setChecked} label={label} />
     </div>
   );
 }

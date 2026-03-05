@@ -25,7 +25,6 @@ export function AppAmbient({ children }: { children: React.ReactNode }) {
   const deviceTier = useDeviceTier();
   const reducedMotion = useReducedMotion();
   const lenisRef = useRef<LenisInstance | null>(null);
-  const rafRef = useRef<number | null>(null);
 
   // Update time-of-day cheaply (once per minute).
   useEffect(() => {
@@ -39,20 +38,8 @@ export function AppAmbient({ children }: { children: React.ReactNode }) {
     lenisRef.current?.destroy();
     lenisRef.current = createLenis({ reducedMotion });
 
-    const lenis = lenisRef.current;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      rafRef.current = window.requestAnimationFrame(raf);
-    };
-
-    rafRef.current = window.requestAnimationFrame(raf);
-
     return () => {
-      if (rafRef.current != null) {
-        window.cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-      lenis.destroy();
+      lenisRef.current?.destroy();
       lenisRef.current = null;
     };
   }, [reducedMotion]);

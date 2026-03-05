@@ -50,6 +50,9 @@ export function TopicSelectionPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Button href="/practice/mock" variant="primary" size="md">
+                Mock tests
+              </Button>
               <Button href="/learning" variant="secondary" size="md">
                 Explore Learning Hub
               </Button>

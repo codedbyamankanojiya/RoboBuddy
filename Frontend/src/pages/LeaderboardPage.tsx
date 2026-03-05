@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 export function LeaderboardPage() {
   const [showAll, setShowAll] = useState(false);
   const leaderboardData = [
-    { name: "Reyna", score: 10000, streak: 15, trend: "up", avatar: "🌟", level: "Ascendant" },
+    { name: "Reyna", score: 10000, streak: 15, trend: "up", avatar: "🌟", level: "Radiant" },
     { name: "Neon", score: 9200, streak: 12, trend: "up", avatar: "⭐", level: "Ascendant" },
     { name: "Omen", score: 8400, streak: 8, trend: "down", avatar: "💫", level: "Diamond" },
     { name: "Sage", score: 7600, streak: 10, trend: "up", avatar: "✨", level: "Platinum" },
@@ -27,6 +27,7 @@ export function LeaderboardPage() {
   }, [leaderboardData, showAll]);
 
   const getTierBadgeStyle = (tier: Tier) => {
+    if (tier === "Radiant") return "bg-red-100 text-red-700 ring-1 ring-red-200";
     if (tier === "Ascendant") return "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200";
     if (tier === "Diamond") return "bg-purple-100 text-purple-700 ring-1 ring-purple-200";
     if (tier === "Platinum") return "bg-sky-100 text-sky-700 ring-1 ring-sky-200";
@@ -38,6 +39,7 @@ export function LeaderboardPage() {
 
   const getTierRowStyle = (tier: Tier, rank: number) => {
     if (rank <= 3) return "bg-gradient-to-r from-violet-50 to-white ring-1 ring-primary/20";
+    if (tier === "Radiant") return "bg-gradient-to-r from-red-50 to-white ring-1 ring-red-200";
     if (tier === "Ascendant") return "bg-gradient-to-r from-emerald-50 to-white ring-1 ring-emerald-200";
     if (tier === "Diamond") return "bg-gradient-to-r from-purple-50 to-white ring-1 ring-purple-200";
     if (tier === "Platinum") return "bg-gradient-to-r from-sky-50 to-white ring-1 ring-sky-200";
@@ -48,6 +50,7 @@ export function LeaderboardPage() {
   };
 
   const getTierAvatarRing = (tier: Tier) => {
+    if (tier === "Radiant") return "ring-red-200 bg-red-50";
     if (tier === "Ascendant") return "ring-emerald-200 bg-emerald-50";
     if (tier === "Diamond") return "ring-purple-200 bg-purple-50";
     if (tier === "Platinum") return "ring-sky-200 bg-sky-50";
@@ -61,6 +64,7 @@ export function LeaderboardPage() {
     if (rank === 1) return "bg-gradient-to-br from-yellow-400 to-amber-500 text-white shadow-lg shadow-amber-200";
     if (rank === 2) return "bg-gradient-to-br from-zinc-300 to-zinc-400 text-white shadow-lg shadow-zinc-200";
     if (rank === 3) return "bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-lg shadow-orange-200";
+    if (tier === "Radiant") return "bg-red-50 text-red-700 ring-1 ring-red-200";
     if (tier === "Ascendant") return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
     if (tier === "Diamond") return "bg-purple-50 text-purple-700 ring-1 ring-purple-200";
     if (tier === "Platinum") return "bg-sky-50 text-sky-700 ring-1 ring-sky-200";
@@ -135,7 +139,7 @@ export function LeaderboardPage() {
           </Card>
         </div>
 
-        <Card variant="glass" className="overflow-hidden bg-white p-0">
+        <Card variant="glass" className="bg-white p-0">
             <div className="bg-gradient-to-r from-violet-100 to-violet-50 p-5 border-b border-violet-100">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -157,7 +161,7 @@ export function LeaderboardPage() {
               </div>
             </div>
 
-          <div className="p-5 space-y-2 max-h-[520px] overflow-y-auto">
+          <div className="p-5 space-y-2">
             {visibleLeaderboard.map((player, i) => (
               <div
                 key={player.name}

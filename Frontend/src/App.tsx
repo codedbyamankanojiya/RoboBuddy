@@ -10,6 +10,7 @@ import { CommunityPage } from "@/pages/CommunityPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TopicSelectionPage } from "@/pages/practice/TopicSelectionPage";
+import { MockTestPage } from "@/pages/practice/MockTestPage";
 import { PracticeSetupPage } from "@/pages/practice/PracticeSetupPage";
 import { ActivePracticeSession } from "@/pages/practice/ActivePracticeSession";
 import { LoginPage } from "@/pages/auth/LoginPage";
@@ -36,6 +37,7 @@ export default function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/practice" element={<TopicSelectionPage />} />
+                <Route path="/practice/mock" element={<MockTestPage />} />
                 <Route path="/practice/:category/:topic" element={<PracticeSetupPage />} />
                 <Route path="/practice/session/:sessionId" element={<ActivePracticeSession />} />
                 <Route path="/learning" element={<LearningPage />} />
