@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { registrationSchema } from "@/lib/validation";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
-import { RegistrationProgress } from "@/components/auth/RegistrationProgress";
 import { CinematicBackground } from "@/components/CinematicBackground";
 
 const STEPS = [
@@ -121,10 +120,10 @@ export function SignUpPage() {
                                 <div key={s.id} className="flex items-center flex-1 last:flex-none">
                                     <div className="flex flex-col items-center">
                                         <div className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-300 ${s.id < step
-                                                ? "border-emerald-500 bg-emerald-500 text-white"
-                                                : s.id === step
-                                                    ? "border-violet-600 bg-violet-600 text-white shadow-glow-sm"
-                                                    : "border-zinc-300 bg-white text-zinc-400"
+                                            ? "border-emerald-500 bg-emerald-500 text-white"
+                                            : s.id === step
+                                                ? "border-violet-600 bg-violet-600 text-white shadow-glow-sm"
+                                                : "border-zinc-300 bg-white text-zinc-400"
                                             }`}>
                                             {s.id < step ? (
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
@@ -208,8 +207,8 @@ export function SignUpPage() {
                                                 {INTEREST_OPTIONS.map((opt) => (
                                                     <button key={opt} type="button" onClick={() => toggleInterest(opt)}
                                                         className={`rounded-full px-4 py-2 text-sm font-medium border transition-all duration-200 ${interests.includes(opt)
-                                                                ? "border-violet-400 bg-violet-50 text-violet-700"
-                                                                : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300"
+                                                            ? "border-violet-400 bg-violet-50 text-violet-700"
+                                                            : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300"
                                                             }`}>
                                                         {interests.includes(opt) && <span className="mr-1">✓</span>}{opt}
                                                     </button>
