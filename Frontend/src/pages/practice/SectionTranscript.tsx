@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 type SpeechStatus = "idle" | "connecting" | "running" | "closed" | "error";
 
@@ -15,259 +15,414 @@ type Message = {
   type: "user" | "ai";
   content: string;
   timestamp: number;
+  isRealTime?: boolean; // For real-time STT responses
 };
-
-type WsStatus = "disconnected" | "connecting" | "connected";
 
 export function SectionTranscript({ status, sessionId, category, topic, onStart, onStop }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState("");
-  const [realTimeTranscript, setRealTimeTranscript] = useState("");
+  const [currentQuestion, setCurrentQuestion] = useState<string>("");
+  const [realTimeTranscript, setRealTimeTranscript] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-
-  const refs = useRef<{
-    ws: WebSocket | null;
-    audioEl: HTMLAudioElement | null;
-    scrollEl: HTMLDivElement | null;
-    stream: MediaStream | null;
-    ctx: AudioContext | null;
-    source: MediaStreamAudioSourceNode | null;
-    processor: ScriptProcessorNode | null;
-    silenceTimer: number | null;
-    lastQuestion: string;
-  }>({
-    ws: null,
-    audioEl: null,
-    scrollEl: null,
-    stream: null,
-    ctx: null,
-    source: null,
-    processor: null,
-    silenceTimer: null,
-    lastQuestion: "",
-  });
-
-  const wsUrl = useMemo(() => {
-    if (!sessionId) return null;
-    return `ws://localhost:8000/ws/${sessionId}`;
-  }, [sessionId]);
-
-  const stopAllAudio = () => {
-    if (refs.current.silenceTimer) clearTimeout(refs.current.silenceTimer);
-    refs.current.silenceTimer = null;
-    try {
-      refs.current.processor?.disconnect();
-    } catch {
-      // ignore
-    }
-    refs.current.processor = null;
-
-    try {
-      refs.current.source?.disconnect();
-    } catch {
-      // ignore
-    }
-    refs.current.source = null;
-
-    const ctx = refs.current.ctx;
-    refs.current.ctx = null;
-    if (ctx && ctx.state !== "closed") ctx.close().catch(() => undefined);
-
-    refs.current.stream?.getTracks().forEach((t) => t.stop());
-    refs.current.stream = null;
-  };
-
-  const startAudioStreaming = async () => {
-    const ws = refs.current.ws;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    if (refs.current.processor || refs.current.ctx || refs.current.stream) return;
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        sampleRate: 16000,
-      },
-    });
-    refs.current.stream = stream;
-
-    const ctx = new AudioContext({ sampleRate: 16000 });
-    refs.current.ctx = ctx;
-    const source = ctx.createMediaStreamSource(stream);
-    refs.current.source = source;
-
-    const processor = ctx.createScriptProcessor(4096, 1, 1);
-    refs.current.processor = processor;
-
-    source.connect(processor);
-    processor.connect(ctx.destination);
-
-    processor.onaudioprocess = (event) => {
-      const ws2 = refs.current.ws;
-      if (!ws2 || ws2.readyState !== WebSocket.OPEN) return;
-
-      const inputData = event.inputBuffer.getChannelData(0);
-      const pcmData = new Int16Array(inputData.length);
-      for (let i = 0; i < inputData.length; i++) {
-        pcmData[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
-      }
-
-      const pcmBytes = new Uint8Array(pcmData.buffer);
-      const base64Audio = btoa(String.fromCharCode(...pcmBytes));
-      ws2.send(JSON.stringify({ type: "audio_data", data: base64Audio }));
-    };
-  };
-
-  const playTtsAudio = (base64Audio: string) => {
-    const el = refs.current.audioEl;
-    if (!el) return;
-    try {
-      const url = URL.createObjectURL(
-        new Blob([Uint8Array.from(atob(base64Audio), (c) => c.charCodeAt(0))], { type: "audio/mpeg" }),
-      );
-      el.onended = null;
-      el.src = url;
-      void el.play();
-    } catch {
-      // ignore
-    }
-  };
-
-  const requestNextQuestion = () => {
-    const ws = refs.current.ws;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-
-    setIsLoading(true);
-    if (currentQuestion) {
-      setMessages((prev) => [...prev, { type: "ai", content: currentQuestion, timestamp: Date.now() }]);
-    }
-
-    if (status === "running") onStop?.();
-    stopAllAudio();
-    setCurrentQuestion("");
-    refs.current.lastQuestion = "";
-    setRealTimeTranscript("");
-
-    ws.send(JSON.stringify({ type: "next_question" }));
-    window.setTimeout(() => setIsLoading(false), 600);
-  };
+  const [wsStatus, setWsStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
+  const wsRef = useRef<WebSocket | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const silenceTimerRef = useRef<number | null>(null);
+  const lastTranscriptTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
-    const node = refs.current.scrollEl;
-    if (!node) return;
-    node.scrollTop = node.scrollHeight;
-  }, [messages.length, currentQuestion, realTimeTranscript]);
+    if (sessionId && category && topic) {
+      // Connect to WebSocket
+      setWsStatus("connecting");
+      const wsUrl = `ws://localhost:8000/ws/${sessionId}`;
+      console.log('Connecting to WebSocket:', wsUrl);
+      console.log('Session ID:', sessionId);
+      console.log('Category:', category);
+      console.log('Topic:', topic);
+      
+      const websocket = new WebSocket(wsUrl);
+      wsRef.current = websocket;
+      
+      websocket.onopen = () => {
+        console.log('Connected to WebSocket');
+        setWsStatus("connected");
+        // Start session with topic_id
+        websocket.send(JSON.stringify({
+          type: "start_session",
+          category: category,
+          topic_id: topic
+        }));
+      };
 
-  useEffect(() => {
-    if (!wsUrl || !sessionId || !category || !topic) {
-      return;
-    }
-
-    const ws = new WebSocket(wsUrl);
-    refs.current.ws = ws;
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "start_session", category, topic_id: topic }));
-    };
-
-    ws.onmessage = (event) => {
-      let data: any;
-      try {
-        data = JSON.parse(event.data);
-      } catch {
-        return;
-      }
-      if (!data || typeof data.type !== "string") return;
-
-      if (data.type === "ai_message") {
-        const q = String(data.content ?? "");
-        setCurrentQuestion(q);
-        refs.current.lastQuestion = q;
-        setRealTimeTranscript("");
-        if (refs.current.silenceTimer) clearTimeout(refs.current.silenceTimer);
-        refs.current.silenceTimer = null;
-        ws.send(JSON.stringify({ type: "get_audio", text: q }));
-        return;
-      }
-
-      if (data.type === "audio_response") {
-        if (typeof data.data === "string") {
-          playTtsAudio(data.data);
-          const el = refs.current.audioEl;
-          if (el) {
-            el.onended = () => {
-              if (status !== "running") onStart?.();
+      websocket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data.type, data);
+        
+        if (data.type === "ai_message") {
+          // Set current question and popup
+          setCurrentQuestion(data.content);
+          
+          // Clear real-time transcript for new question
+          setRealTimeTranscript("");
+          
+          // Request TTS audio for the question
+          websocket.send(JSON.stringify({
+            type: "get_audio",
+            text: data.content
+          }));
+        }
+        
+        if (data.type === "audio_response") {
+          // Play TTS audio
+          playAudio(data.data);
+          
+          // After TTS finishes playing, restart STT
+          if (audioRef.current) {
+            audioRef.current.onended = () => {
+              if (onStart && status !== "running") {
+                setTimeout(() => onStart(), 500); // Small delay before restarting
+              }
             };
           }
         }
-        return;
-      }
-
-      if (data.type === "realtime_transcript") {
-        setRealTimeTranscript(String(data.text ?? ""));
-        if (refs.current.silenceTimer) clearTimeout(refs.current.silenceTimer);
-        refs.current.silenceTimer = window.setTimeout(() => {
-          stopAllAudio();
-          if (status === "running") onStop?.();
-        }, 5000);
-        return;
-      }
-
-      if (data.type === "final_transcript") {
-        const answer = String(data.text ?? "");
-        const q = refs.current.lastQuestion;
-        if (q) {
-          setMessages((prev) => [
-            ...prev,
-            { type: "ai", content: q, timestamp: Date.now() },
-            { type: "user", content: answer, timestamp: Date.now() },
-          ]);
+        
+        if (data.type === "realtime_transcript") {
+          // Update real-time transcript
+          console.log('Real-time transcript:', data.text);
+          setRealTimeTranscript(data.text);
+          
+          // Reset silence timer when we get transcript
+          lastTranscriptTimeRef.current = Date.now();
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+          }
+          
+          // Set new silence timer - stop recording after 5 seconds of silence
+          silenceTimerRef.current = window.setTimeout(() => {
+            console.log('User stopped speaking - stopping recording');
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+              mediaRecorderRef.current.stop();
+            }
+          }, 5000);
         }
-        setCurrentQuestion("");
-        refs.current.lastQuestion = "";
-        setRealTimeTranscript("");
-        if (refs.current.silenceTimer) clearTimeout(refs.current.silenceTimer);
-        refs.current.silenceTimer = null;
-        return;
-      }
-    };
+        
+        if (data.type === "final_transcript") {
+          console.log('Final transcript:', data.text);
+          // Add both question and answer to message history
+          setMessages(prev => [
+            ...prev,
+            {
+              type: "ai",
+              content: currentQuestion,
+              timestamp: Date.now()
+            },
+            {
+              type: "user",
+              content: data.text,
+              timestamp: Date.now()
+            }
+          ]);
+          
+          // Clear current question and real-time transcript
+          setCurrentQuestion("");
+          setRealTimeTranscript("");
+        }
+        
+        if (data.type === "stt_error") {
+          console.error('STT Error:', data.message);
+        }
+      };
 
-    return () => {
-      try {
-        ws.close();
-      } catch {
-        // ignore
-      }
-      if (refs.current.ws === ws) refs.current.ws = null;
-      stopAllAudio();
-    };
-  }, [wsUrl, sessionId, category, topic, onStart, onStop, status]);
+      websocket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        console.error('WebSocket readyState:', websocket.readyState);
+        console.error('WebSocket URL:', wsUrl);
+        setWsStatus("disconnected");
+        
+        // Try to reconnect after a short delay
+        setTimeout(() => {
+          if (sessionId && category && topic) {
+            console.log('Attempting to reconnect WebSocket...');
+            const newWebSocket = new WebSocket(`ws://localhost:8000/ws/${sessionId}`);
+            wsRef.current = newWebSocket;
+            
+            newWebSocket.onopen = () => {
+              console.log('WebSocket reconnected');
+              newWebSocket.send(JSON.stringify({
+                type: "start_session",
+                category: category,
+                topic: topic
+              }));
+            };
+            
+            newWebSocket.onmessage = (event) => {
+              const data = JSON.parse(event.data);
+              console.log('WebSocket message received:', data.type, data);
+              
+              if (data.type === "ai_message") {
+                setCurrentQuestion(data.content);
+                setRealTimeTranscript("");
+                
+                newWebSocket.send(JSON.stringify({
+                  type: "get_audio",
+                  text: data.content
+                }));
+              }
+              
+              if (data.type === "audio_response") {
+                playAudio(data.data);
+                
+                if (audioRef.current) {
+                  audioRef.current.onended = () => {
+                    if (onStart && status !== "running") {
+                      setTimeout(() => onStart(), 500);
+                    }
+                  };
+                }
+              }
+              
+              if (data.type === "realtime_transcript") {
+                console.log('Real-time transcript received:', data.text);
+                setRealTimeTranscript(data.text);
+                
+                // Reset silence timer when we get transcript
+                lastTranscriptTimeRef.current = Date.now();
+                if (silenceTimerRef.current) {
+                  clearTimeout(silenceTimerRef.current);
+                }
+                
+                // Set new silence timer
+                silenceTimerRef.current = window.setTimeout(() => {
+                  console.log('User stopped speaking - stopping recording');
+                  stopAudioRecording();
+                }, 3000); // 3 seconds of silence
+              }
+              
+              if (data.type === "final_transcript") {
+                console.log('Final transcript received:', data.text);
+                
+                // Add to message history
+                if (currentQuestion) {
+                  setMessages(prev => [
+                    ...prev,
+                    {
+                      type: "ai",
+                      content: currentQuestion,
+                      timestamp: Date.now()
+                    },
+                    {
+                      type: "user",
+                      content: data.text,
+                      timestamp: Date.now()
+                    }
+                  ]);
+                }
+                
+                // Clear current question and transcript
+                setCurrentQuestion("");
+                setRealTimeTranscript("");
+              }
+              
+              if (data.type === "stt_error") {
+                console.error('STT Error:', data.message);
+              }
+            };
+            
+            newWebSocket.onclose = () => {
+              console.log('WebSocket reconnection closed');
+            };
+            
+            newWebSocket.onerror = (err) => {
+              console.error('WebSocket reconnection error:', err);
+            };
+          }
+        }, 2000);
+      };
 
+      websocket.onclose = () => {
+        console.log('WebSocket connection closed');
+        setWsStatus("disconnected");
+      };
+
+      return () => {
+        websocket.close();
+      };
+    }
+  }, [sessionId, category, topic]);
+
+  const playAudio = (base64Audio: string) => {
+    try {
+      const audioBlob = new Blob([Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0))], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.play();
+      }
+    } catch (error) {
+      console.error('Error playing audio:', error);
+    }
+  };
+
+  const startAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 16000
+        }
+      });
+      streamRef.current = stream;
+      
+      // Use Web Audio API for better audio processing
+      const audioContext = new AudioContext({ sampleRate: 16000 });
+      const source = audioContext.createMediaStreamSource(stream);
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+      
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+      
+      processor.onaudioprocess = (event) => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          const inputData = event.inputBuffer.getChannelData(0);
+          
+          // Convert Float32Array to Int16Array (16-bit PCM)
+          const pcmData = new Int16Array(inputData.length);
+          for (let i = 0; i < inputData.length; i++) {
+            pcmData[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
+          }
+          
+          // Convert to bytes and send to backend
+          const pcmBytes = new Uint8Array(pcmData.buffer);
+          const base64Audio = btoa(String.fromCharCode(...pcmBytes));
+          
+          console.log(`Sending audio chunk: ${pcmBytes.length} bytes`);
+          
+          wsRef.current!.send(JSON.stringify({
+            type: "audio_data",
+            data: base64Audio
+          }));
+        }
+      };
+      
+      // Store processor reference for cleanup
+      (mediaRecorderRef.current as any) = { audioContext, processor, source };
+      
+      console.log('Audio streaming started - sending PCM chunks to backend...');
+      
+    } catch (error) {
+      console.error('Error starting audio streaming:', error);
+    }
+  };
+  
+  const stopAudioRecording = () => {
+    // Clear silence timer
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    
+    // Stop audio processing
+    const audioProcessor = mediaRecorderRef.current as any;
+    if (audioProcessor && audioProcessor.audioContext) {
+      audioProcessor.processor.disconnect();
+      audioProcessor.source.disconnect();
+      audioProcessor.audioContext.close();
+      mediaRecorderRef.current = null;
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    console.log('Audio streaming stopped');
+  };
+
+  const handleNextQuestion = () => {
+    if (wsRef.current) {
+      setIsLoading(true);
+      
+      // If there's a current question, add it to history
+      if (currentQuestion) {
+        setMessages(prev => [
+          ...prev,
+          {
+            type: "ai",
+            content: currentQuestion,
+            timestamp: Date.now()
+          }
+        ]);
+      }
+      
+      // Stop STT/recording first
+      if (onStop && status === "running") {
+        onStop();
+      }
+      
+      // Clear current question and transcript
+      setCurrentQuestion("");
+      setRealTimeTranscript("");
+      
+      // Request next question
+      wsRef.current.send(JSON.stringify({
+        type: "next_question"
+      }));
+      
+      // Reset loading after a short delay
+      setTimeout(() => setIsLoading(false), 1000);
+    }
+  };
+
+  // Start/stop audio recording based on status
   useEffect(() => {
     if (status === "running" && currentQuestion) {
-      startAudioStreaming().catch(() => {
-        // ignore
-      });
-      return;
+      startAudioRecording();
+    } else {
+      stopAudioRecording();
     }
-    stopAllAudio();
+    
+    return () => {
+      stopAudioRecording();
+    };
   }, [status, currentQuestion]);
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200/80 backdrop-blur border border-white/50 min-h-[500px] max-h-[600px] flex flex-col">
-      <audio ref={(n) => void (refs.current.audioEl = n)} className="hidden" />
-
-      <div className="mb-4 text-sm font-semibold text-zinc-700">section transcript</div>
-
-      <div ref={(n) => void (refs.current.scrollEl = n)} className="flex-1 overflow-y-auto space-y-4 mb-4">
+      {/* Hidden audio element for TTS playback */}
+      <audio ref={audioRef} className="hidden" />
+      
+      {/* Headline */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm font-semibold text-zinc-700">section transcript</div>
+        <div className="flex items-center gap-2 text-xs">
+          <div className={`h-2 w-2 rounded-full ${
+            wsStatus === "connected" ? "bg-emerald-500" : 
+            wsStatus === "connecting" ? "bg-yellow-500 animate-pulse" : 
+            "bg-red-500"
+          }`}></div>
+          <span className="text-zinc-500">
+            {wsStatus === "connected" ? "Connected" : 
+             wsStatus === "connecting" ? "Connecting..." : 
+             "Disconnected"}
+          </span>
+        </div>
+      </div>
+      
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+        {/* Current Question Popup */}
         {currentQuestion && (
           <div className="p-4 bg-violet-50 border border-violet-200 rounded-2xl">
             <div className="flex items-start gap-2 mb-3">
               <div className="text-sm font-semibold text-violet-700">Question:</div>
               <div className="flex-1 text-sm text-violet-900">{currentQuestion}</div>
             </div>
-
+            
+            {/* Real-time STT response */}
             <div className="p-4 bg-white border-2 border-violet-300 rounded-xl">
               <div className="flex items-start gap-2">
                 <div className="text-sm font-semibold text-violet-600 min-w-fit">User:</div>
@@ -278,31 +433,58 @@ export function SectionTranscript({ status, sessionId, category, topic, onStart,
             </div>
           </div>
         )}
-
+        
+        {/* Message History */}
         <div className="space-y-3">
           {messages.length === 0 && !currentQuestion ? (
-            <div className="text-zinc-400 text-sm italic">Waiting for session to start...</div>
+            <div className="text-zinc-400 text-sm italic">
+              Waiting for session to start...
+            </div>
           ) : (
-            messages.map((m, idx) => (
-              <div key={idx} className={`flex ${m.type === "user" ? "justify-end" : "justify-start"}`}>
+            messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
+              >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${m.type === "user" ? "bg-violet-500 text-white" : "bg-zinc-100 text-zinc-800"}`}
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                    message.type === "user"
+                      ? "bg-violet-500 text-white"
+                      : "bg-zinc-100 text-zinc-800"
+                  }`}
                 >
-                  <div className="font-medium mb-1">{m.type === "ai" ? "AI Coach" : "You"}</div>
-                  <div>{m.content}</div>
+                  <div className="font-medium mb-1">
+                    {message.type === "ai" ? "AI Coach" : "You"}
+                  </div>
+                  <div>{message.content}</div>
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
-
+      
+      {/* Controls */}
       <div className="flex items-center justify-between pt-4 border-t border-zinc-200">
-        <div className="text-xs text-zinc-500">{status === "running" ? "Listening..." : "Ready"}</div>
-
+        {/* Status indicator */}
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          {status === "running" ? (
+            <>
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Listening...
+            </>
+          ) : (
+            <>
+              <span className="h-2 w-2 rounded-full bg-zinc-400"></span>
+              Ready
+            </>
+          )}
+        </div>
+        
+        {/* Next Question Button */}
         <button
-          onClick={requestNextQuestion}
-          disabled={isLoading || !refs.current.ws || refs.current.ws.readyState !== WebSocket.OPEN}
+          onClick={handleNextQuestion}
+          disabled={isLoading || !wsRef.current}
           className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-xl hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? "Loading..." : "Next Question"}
