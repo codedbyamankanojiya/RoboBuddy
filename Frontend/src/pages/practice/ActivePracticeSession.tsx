@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CameraFeed } from "@/components/CameraFeed";
 import { FocusMeter } from "@/components/FocusMeter";
-import { SectionTranscript } from "@/pages/practice/SectionTranscript";
 import { useSpeechWebSocket } from "@/lib/useSpeechWebSocket";
 import { getTopic, type TopicCategory } from "@/pages/practice/practiceCatalog";
 
@@ -118,12 +117,6 @@ export function ActivePracticeSession() {
           >
             End
           </Button>
-          <Button variant="primary" size="md" onClick={start} disabled={running || !session.microphoneEnabled}>
-            Start
-          </Button>
-          <Button variant="secondary" size="md" onClick={stop} disabled={!running}>
-            Stop
-          </Button>
         </div>
       </div>
 
@@ -133,14 +126,6 @@ export function ActivePracticeSession() {
         </div>
         <div className="space-y-5 lg:col-span-7">
           <FocusMeter value={focusPercent} />
-          <SectionTranscript
-            status={status}
-            sessionId={sessionId}
-            category={session.category}
-            topic={session.topic}
-            onStart={start}
-            onStop={stop}
-          />
         </div>
       </div>
     </AppShell>
